@@ -7,10 +7,8 @@ info:
   title: "WSO2 API Manager - Publisher"
   description: |
     This document specifies a **RESTful API** for WSO2 **API Manager** - Publisher.
-    
-    You can find the source of this API definition 
-    [here](https://github.com/hevayo/restful-apim). 
-    It was written with [swagger 2](http://swagger.io/).
+
+    It is written with [swagger 2](http://swagger.io/).
 
   contact:
     name: "WSO2"
@@ -35,7 +33,7 @@ host: apis.wso2.com
 
 # The base path of the API.
 # Will be prefixed to all paths.
-basePath: /apim/v1.0.0
+basePath: /api/am/publisher/v0.9
 
 # The following media types can be passed as input in message bodies of the API.
 # The actual media type must be specified in the Content-Type header field of the request.
@@ -60,16 +58,32 @@ x-wso2-security:
     x-wso2-scopes:
       - description: ""
         roles: admin
-        name: API_PUBLISHER_SCOPE
-        key: API_PUBLISHER_SCOPE
+        name: apim:api_view
+        key: apim:api_view
       - description: ""
         roles: admin
-        name: API_CREATOR_SCOPE
-        key: API_CREATOR_SCOPE
+        name: apim:api_create
+        key: apim:api_create
       - description: ""
         roles: admin
-        name: API_ADMINISTRATIVE_SCOPE
-        key: API_ADMINISTRATIVE_SCOPE
+        name: apim:api_publish
+        key: apim:api_publish
+      - description: ""
+        roles: admin
+        name: apim:tier_view
+        key: apim:tier_view
+      - description: ""
+        roles: admin
+        name: apim:tier_manage
+        key: apim:tier_manage
+      - description: ""
+        roles: admin
+        name: apim:subscription_view
+        key: apim:subscription_view
+      - description: ""
+        roles: admin
+        name: apim:subscription_block
+        key: apim:subscription_block
 
 ######################################################
 # The "API Collection" resource APIs
@@ -81,6 +95,7 @@ paths:
 # Retrieving the list of all APIs qualifying under a given search condition  
 #-----------------------------------------------------
     get:
+      x-scope: apim:api_view
       summary: |
         Retrieving APIs
       description: |
@@ -95,7 +110,7 @@ paths:
 
             You can search in attributes by using an **"attribute:"** modifier.
 
-            Eg. "provider:wso2" will match an API if the provider of the API is wso2.
+            Eg. "provider:wso2" will match an API if the provider of the API contains "wso2".
 
             Supported attribute modifiers are [**version, context, status,
             description, subcontext, doc, provider, tag **]
@@ -103,14 +118,6 @@ paths:
             If no advanced attribute modifier has been specified, search will match the
             given query string against API Name.
           type: string
-        - name: type
-          in: query
-          description: |
-            List prototype or production APIs.
-          type: string
-          enum:
-            - PRODUCTION
-            - PROTOTYPE
         - $ref : "#/parameters/Accept"
         - $ref : "#/parameters/If-None-Match"
       tags:
@@ -146,7 +153,7 @@ paths:
 # Create a new API 
 #-----------------------------------------------------
     post:
-      x-scope: API_CREATOR_SCOPE
+      x-scope: apim:api_create
       description: |
         Create a new API
       parameters:
@@ -204,6 +211,7 @@ paths:
 # Retrieve the details of an API definition
 #-----------------------------------------------------
     get:
+      x-scope: apim:api_view
       description: |
         Get details of an API
       parameters:
@@ -256,7 +264,7 @@ paths:
 # Update the definition of an API
 #-----------------------------------------------------
     put:
-      x-scope: API_CREATOR_SCOPE
+      x-scope: apim:api_create
       description: |
         Update an existing API
       parameters:
@@ -328,7 +336,7 @@ paths:
 # Delete the definition of an API
 #-----------------------------------------------------
     delete:
-      x-scope: API_CREATOR_SCOPE
+      x-scope: apim:api_create
       description: | 
         Delete an existing API
       parameters:
@@ -367,6 +375,7 @@ paths:
 # Retrieve the API swagger definition
 #-----------------------------------------------------
     get:
+      x-scope: apim:api_view
       description: |
         Get the swagger of an API
       parameters:
@@ -413,6 +422,76 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 
+#-----------------------------------------------------
+# Update the API swagger definition
+#-----------------------------------------------------
+    put:
+      consumes: 
+        - multipart/form-data
+      x-scope: apim:api_create
+      description: |
+        Update an existing swagger definition of an API
+      parameters:
+        - $ref: '#/parameters/apiId'
+        - in: formData
+          name: apiDefinition
+          description: Swagger definition of the API
+          type: string
+          required: true
+        - $ref: '#/parameters/Content-Type'
+        - $ref: '#/parameters/If-Match'
+        - $ref: '#/parameters/If-Unmodified-Since'
+      tags:
+        - API (individual)
+        - Update
+      responses:
+        200:
+          description: |
+            OK. 
+            Successful response with updated Swagger definition
+          headers:
+            Location:
+              description: |
+                The URL of the newly created resource.
+              type: string
+            Content-Type:
+              description: |
+                The content type of the body.
+              type: string
+            ETag:
+              description: |
+                Entity Tag of the response resource. Used by caches, or in conditional request.
+              type: string
+            Last-Modified:
+              description: |
+                Date and time the resource has been modifed the last time. 
+                Used by caches, or in conditional requests.
+              type: string
+        400:
+          description: |
+            Bad Request. 
+            Invalid request or validation error
+          schema:
+            $ref: '#/definitions/Error'
+        403:
+          description: |
+            Forbidden. 
+            The request must be conditional but no condition has been specified.
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: |
+            Not Found. 
+            The resource to be updated does not exist.
+          schema:
+            $ref: '#/definitions/Error'
+        412:
+          description: |
+            Precondition Failed. 
+            The request has not been performed because one of the preconditions is not met.
+          schema:
+            $ref: '#/definitions/Error'
+
 ######################################################
 # The "Copy API" Processing Function resource API
 ######################################################
@@ -422,7 +501,7 @@ paths:
 # Create a new API based on an already existing one
 #-----------------------------------------------------
     post:
-      x-scope: API_CREATOR_SCOPE
+      x-scope: apim:api_create
       description: |
         Create a new API by copying an existing API
       parameters:
@@ -430,6 +509,7 @@ paths:
           description: Version of the new API.
           type: string
           in: query
+          required: true
         - $ref: '#/parameters/apiId-Q'
       tags:
         - API (individual)
@@ -466,7 +546,7 @@ paths:
 # Change the lifecycle of an API
 #-----------------------------------------------------
     post:
-      x-scope: API_PUBLISHER_SCOPE
+      x-scope: apim:api_publish
       description: |
         Change the lifecycle of an API
       parameters:
@@ -478,6 +558,7 @@ paths:
 
           in: query
           type: string
+          required: true
           enum:
             - Publish
             - Deploy as a Prototype
@@ -551,26 +632,13 @@ paths:
 # Retrieve the documents associated with an API that qualify under a search condition
 #-----------------------------------------------------
     get:
+      x-scope: apim:api_view
       description: |
         Get a list of documents belonging to an API.
       parameters:
         - $ref: '#/parameters/apiId'
         - $ref: '#/parameters/limit'
         - $ref: '#/parameters/offset'
-        - name: query
-          in: query
-          description: |
-            Search condition.
-
-            You can search in attributes by using an **"attribute:"** modifier.
-
-            Eg. "name:Readme" will match a document if the name of the document is 'Readme'.
-
-            Supported attribute modifiers are [**name, summary, type **]
-
-            If no advanced attribute modifier has been specified, search will match the
-            given query string against document Name.
-          type: string
         - $ref: '#/parameters/Accept'
         - $ref: '#/parameters/If-None-Match'
       tags:
@@ -613,7 +681,7 @@ paths:
 # Add a document to a certain API
 #-----------------------------------------------------
     post:
-      x-scope: API_CREATOR_SCOPE
+      x-scope: apim:api_create
       description: |
         Add a new document to an API
       parameters:
@@ -671,6 +739,7 @@ paths:
 # Retrieve a particular document of a certain API
 #-----------------------------------------------------
     get:
+      x-scope: apim:api_view
       description: |
         Get a particular document associated with an API.
       parameters:
@@ -725,7 +794,7 @@ paths:
 # Update a particular document of a certain API
 #-----------------------------------------------------
     put:
-      x-scope: API_CREATOR_SCOPE
+      x-scope: apim:api_create
       description: |
         Update document details.
       parameters:
@@ -793,7 +862,7 @@ paths:
 # Delete a particular document of a certain API
 #-----------------------------------------------------
     delete:
-      x-scope: API_CREATOR_SCOPE
+      x-scope: apim:api_create
       description: |
         Delete a document of an API
       parameters:
@@ -832,6 +901,7 @@ paths:
   # Downloads a FILE type document/get the inline content or source url of a certain document
   #-------------------------------------------------------------------------------------------------
       get:
+        x-scope: apim:api_view
         description: |
           Downloads a FILE type document/get the inline content or source url of a certain document.
         parameters:
@@ -895,7 +965,7 @@ paths:
       post:
         consumes: 
           - multipart/form-data
-        x-scope: API_CREATOR_SCOPE
+        x-scope: apim:api_create
         description: |
           Upload a file to a document or add inline content to the document.
 
@@ -976,6 +1046,7 @@ paths:
 # Retrieve the details about a certain application
 #-----------------------------------------------------
     get:
+      x-scope: apim:api_create
       description: |
         Get application details
       parameters:
@@ -1033,6 +1104,7 @@ paths:
 # Retrieve all subscriptions of a certain API
 #-----------------------------------------------------
     get:
+      x-scope: apim:subscription_view
       description: |
         Get subscription list.
         The API Identifier and corresponding Application Identifier
@@ -1082,6 +1154,7 @@ paths:
 # Retrieve a certain subscription
 #-----------------------------------------------------
     get:
+      x-scope: apim:subscription_view
       description: |
         Get subscription details
       parameters:
@@ -1129,7 +1202,7 @@ paths:
 # Block a certain subscription
 #-----------------------------------------------------
     post:
-      x-scope: API_PUBLISHER_SCOPE
+      x-scope: apim:subscription_block
       parameters:
         - $ref: '#/parameters/subscriptionId-Q'
         - name: blockState
@@ -1137,6 +1210,7 @@ paths:
           description: |
             Subscription block state.
           type: string
+          required: true
           enum:
             - BLOCKED
             - PROD_ONLY_BLOCKED
@@ -1191,7 +1265,7 @@ paths:
 # Unblock a certain subscription
 #-----------------------------------------------------
     post:
-      x-scope: API_PUBLISHER_SCOPE
+      x-scope: apim:subscription_block
       parameters:
         - $ref: '#/parameters/subscriptionId-Q'
         - $ref: '#/parameters/If-Match'
@@ -1245,6 +1319,7 @@ paths:
 # Retrieve the list of all available tiers
 #-----------------------------------------------------
     get:
+      x-scope: apim:tier_view
       description: |
         Get available tiers
       parameters:
@@ -1287,7 +1362,7 @@ paths:
 # Create a new tier
 #-----------------------------------------------------
     post:
-      x-scope: API_ADMINISTRATIVE_SCOPE
+      x-scope: apim:tier_manage
       description: |
         Add a new tier
       parameters:
@@ -1345,6 +1420,7 @@ paths:
 # Retrieve a certain tier
 #-----------------------------------------------------
     get:
+      x-scope: apim:tier_view
       description: |
         Get tier details
       parameters:
@@ -1399,7 +1475,7 @@ paths:
 # Update a certain tier
 #-----------------------------------------------------
     put:
-      x-scope: API_ADMINISTRATIVE_SCOPE
+      x-scope: apim:tier_manage
       description: |
         Update tier details
       parameters:
@@ -1467,7 +1543,7 @@ paths:
 # Delete a certain tier
 #-----------------------------------------------------
     delete:
-      x-scope: API_ADMINISTRATIVE_SCOPE
+      x-scope: apim:tier_manage
       description: |
         Remove a tier
       parameters:
@@ -1505,7 +1581,7 @@ paths:
 # Update the permission of a certain tier
 #-----------------------------------------------------
     post:
-      x-scope: API_ADMINISTRATIVE_SCOPE
+      x-scope: apim:tier_manage
       description: |
         Update tier permission
       parameters:
@@ -1577,6 +1653,7 @@ paths:
 # Retrieve the list of environments configured for a certain API
 #-----------------------------------------------------
     get:
+      x-scope: apim:api_view
       description: |
         Get a list of gateway environments configured previously.
       parameters:
@@ -1826,16 +1903,19 @@ definitions:
         type: integer
         description: |
           Number of APIs returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/apis?limit=1&offset=2&query="
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/apis?limit=1&offset=0&query="
       list:
         type: array
         items:
@@ -1849,20 +1929,27 @@ definitions:
     properties:
       id:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorAPI
       description:
         type: string
+        example: A calculator API that supports basic operations
       context:
         type: string
+        example: CalculatorAPI
       version:
         type: string
+        example: 1.0.0
       provider:
         description: |
           If the provider value is not given, the user invoking the API will be used as the provider.
         type: string
+        example: admin
       status:
         type: string
+        example: CREATED
 
 #-----------------------------------------------------
 # The API resource
@@ -1874,53 +1961,74 @@ definitions:
       - context
       - version
       - apiDefinition
+      - tiers
+      - isDefaultVersion
+      - transport
+      - endpointConfig
+      - visibility
     properties:
       id:
         type: string
         description: |
           UUID of the api registry artifact
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorAPI
       description:
         type: string
+        example: A calculator API that supports basic operations
       context:
         type: string
+        example: CalculatorAPI
       version:
         type: string
+        example: 1.0.0
       provider:
         description: |
           If the provider value is not given user invoking the api will be used as the provider.
         type: string
+        example: admin
       apiDefinition:
         description: |
           Swagger definition of the API which contains details about URI templates and scopes
         type: string
+        example: "{\"paths\":{\"\\/substract\":{\"get\":{\"x-auth-type\":\"Application & Application User\",\"x-throttling-tier\":\"Unlimited\",\"parameters\":[{\"name\":\"x\",\"required\":true,\"type\":\"string\",\"in\":\"query\"},{\"name\":\"y\",\"required\":true,\"type\":\"string\",\"in\":\"query\"}],\"responses\":{\"200\":{}}}},\"\\/add\":{\"get\":{\"x-auth-type\":\"Application & Application User\",\"x-throttling-tier\":\"Unlimited\",\"parameters\":[{\"name\":\"x\",\"required\":true,\"type\":\"string\",\"in\":\"query\"},{\"name\":\"y\",\"required\":true,\"type\":\"string\",\"in\":\"query\"}],\"responses\":{\"200\":{}}}}},\"swagger\":\"2.0\",\"info\":{\"title\":\"CalculatorAPI\",\"version\":\"1.0.0\"}}"
       status:
         type: string
+        example: CREATED
       responseCaching:
         type: string
+        example: Disabled
       cacheTimeout:
         type: integer
+        example: 300
       destinationStatsEnabled:
         type: string
+        example: Disabled
       isDefaultVersion:
         type: boolean
+        example: false
       transport:
         description: |
           Supported transports for the API (http and/or https).
         type: array
         items:
           type: string
+        example: ["http","https"]
       tags:
         type: array
         items:
           type: string
+        example: ["substract","add"]
       tiers:
         type: array
         items:
           type: string
+        example: ["Unlimited"]
       thumbnailUrl:
         type: string
+        example: ""
       visibility:
         type: string
         enum:
@@ -1928,59 +2036,84 @@ definitions:
           - PRIVATE
           - RESTRICTED
           - CONTROLLED
+        example: PUBLIC
       visibleRoles:
         type: array
         items:
           type: string
+        example: []
       visibleTenants:
         type: array
         items:
           type: string
+        example: []
       endpointConfig:
         type: string
+        example: "{\"production_endpoints\":{\"url\":\"http://localhost:9763/am/sample/calculator/v1/api\",\"config\":null},\"implementation_status\":\"managed\",\"endpoint_type\":\"http\"}"
+      gatewayEnvironments:
+        description: |
+          Comma separated list of gateway environments.
+        type: string
+        example: Production and Sandbox
       sequences:
         type: array
         items:
           $ref: '#/definitions/Sequence'
+        example: []
       subscriptionAvailability:
         type: string
         enum:
           - current_tenant
           - all_tenants
           - specific_tenants
+        example: current_tenant
       subscriptionAvailableTenants:
         type: array
         items:
           type: string
+        example: []
       businessInformation:
         properties:
           businessOwner:
             type: string
+            example: businessowner
           businessOwnerEmail:
             type: string
+            example: businessowner@wso2.com
           technicalOwner:
             type: string
+            example: technicalowner
           technicalOwnerEmail:
             type: string
+            example: technicalowner@wso2.com
 
 #-----------------------------------------------------
 # The Application resource
 #-----------------------------------------------------
   Application:
     title: Application
+    required:
+      - name
+      - throttlingTier
     properties:
       applicationId:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorApp
       subscriber:
         type: string
+        example: admin
       throttlingTier:
         type: string
+        example: Unlimited
       description:
         type: string
+        example: Sample calculator application
       groupId:
         type: string
+        example: ""
 
 #-----------------------------------------------------
 # The Document List resource
@@ -1992,16 +2125,19 @@ definitions:
         type: integer
         description: |
           Number of Documents returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/apis/01234567-0123-0123-0123-012345678901/documents?limit=1&offset=2"
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/apis/01234567-0123-0123-0123-012345678901/documents?limit=1&offset=0"
       list:
         type: array
         items:
@@ -2015,11 +2151,15 @@ definitions:
     required:
       - name
       - type
+      - sourceType
+      - visibility
     properties:
       documentId:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorDoc
       type:
         type: string
         enum:
@@ -2030,24 +2170,30 @@ definitions:
           - API_MESSAGE_FORMAT
           - SWAGGER_DOC
           - OTHER
+        example: HOWTO
       summary:
         type: string
+        example: "Summary of Calculator Documentation"
       sourceType:
         type: string
         enum:
           - INLINE
           - URL
           - FILE
+        example: INLINE
       sourceUrl:
         type: string
+        example: ""
       otherTypeName:
         type: string
+        example: ""
       visibility:
         type: string
         enum:
           - OWNER_ONLY
           - PRIVATE
           - API_LEVEL
+        example: API_LEVEL
 
 #-----------------------------------------------------
 # The Tier List resource
@@ -2059,16 +2205,19 @@ definitions:
         type: integer
         description: |
           Number of Tiers returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/tiers/api?limit=1&offset=2"
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/tiers/api?limit=1&offset=0"
       list:
         type: array
         items:
@@ -2084,31 +2233,38 @@ definitions:
       - tierPlan
       - requestCount
       - unitTime
+      - stopOnQuotaReach
     properties:
       name:
         type: string
+        example: Platinum
       description:
         type: string
+        example: "Allows 50 request(s) per minute."
       tierLevel:
         type: string
         enum:
           - api
           - application
           - resource
+        example: api
       attributes:
         description: |
           Custom attributes added to the tier policy
         type: object
         additionalProperties:
           type: string
+        example: {}
       requestCount:
         description: |
           Maximum number of requests which can be sent within a provided unit time
         type: integer
         format: int64
+        example: 50
       unitTime:
         type: integer
         format: int64
+        example: 60000
       tierPlan:
         description: |
           This attribute declares whether this tier is available under commercial or free
@@ -2116,11 +2272,13 @@ definitions:
         enum: 
           - FREE
           - COMMERCIAL
+        example: FREE
       stopOnQuotaReach:
         description: |
           By making this attribute to false, you are capabale of sending requests 
           even if the request count exceeded within a unit time
         type: boolean
+        example: true
 
 #-----------------------------------------------------
 # The Tier Permission resource
@@ -2136,10 +2294,12 @@ definitions:
         enum:
           - allow
           - deny
+        example: deny
       roles:
         type: array
         items:
           type: string
+        example: ["Internal/everyone"]
 
 #-----------------------------------------------------
 # The Subscription List resource
@@ -2151,16 +2311,19 @@ definitions:
         type: integer
         description: |
           Number of Subscriptions returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/subscriptions?limit=1&offset=2&apiId=01234567-0123-0123-0123-012345678901&groupId="
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/subscriptions?limit=1&offset=0&apiId=01234567-0123-0123-0123-012345678901&groupId="
       list:
         type: array
         items:
@@ -2172,16 +2335,22 @@ definitions:
   Subscription:
     title: Subscription
     required:
-      - subscriptionId
+      - applicationId
+      - apiIdentifier
+      - tier
     properties:
       subscriptionId:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       applicationId:
         type: string
-      apiId:
+        example: 01234567-0123-0123-0123-012345678901
+      apiIdentifier:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       tier:
         type: string
+        example: Unlimited
       status:
         type: string
         enum:
@@ -2190,6 +2359,7 @@ definitions:
           - UNBLOCKED
           - ON_HOLD
           - REJECTED
+        example: UNBLOCKED
 
 #-----------------------------------------------------
 # The Sequence resource
@@ -2201,10 +2371,13 @@ definitions:
     properties:
       name:
         type: string
+        example: log_in_message
       config:
         type: string
+        example: ""
       type:
         type: string
+        example: in
 
 #-----------------------------------------------------
 # The Error resource
@@ -2247,8 +2420,7 @@ definitions:
       - message
     properties:
       code:
-        type: integer
-        format: int64
+        type: string
       message:
         type: string
         description: |
@@ -2268,12 +2440,16 @@ definitions:
     properties:
       name:
         type: string
+        example: Production and Sandbox
       type:
         type: string
+        example: hybrid
       serverUrl:
         type: string
+        example: "https://localhost:9443//services/"
       showInApiConsole:
         type: boolean
+        example: true
       endpoints:
         $ref: '#/definitions/EnvironmentEndpoints'
 
@@ -2287,6 +2463,7 @@ definitions:
         type: integer
         description: |
           Number of Environments returned.
+        example: 1
       list:
         type: array
         items:
@@ -2302,10 +2479,11 @@ definitions:
       http:
         type: string
         description: HTTP environment URL
+        example: "http://localhost:8280"
       https:
         type: string
         description: HTTPS environment URL
-
+        example: "https://localhost:8244"
 #-----------------------------------------------------
 # END-OF-FILE
 #-----------------------------------------------------
