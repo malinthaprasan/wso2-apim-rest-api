@@ -4,13 +4,11 @@ swagger: '2.0'
 ######################################################
 info:
   version: "0.9.0"
-  title: "WSO2 API Manager"
+  title: "WSO2 API Manager - Store"
   description: |
     This document specifies a **RESTful API** for WSO2 **API Manager** - Store.
-    
-    You can find the source of this API definition 
-    [here](https://github.com/hevayo/restful-apim). 
-    It was written with [swagger 2](http://swagger.io/).
+
+    It is written with [swagger 2](http://swagger.io/).
 
   contact:
     name: "WSO2"
@@ -35,7 +33,7 @@ host: apis.wso2.com
 
 # The base path of the API.
 # Will be prefixed to all paths.
-basePath: /apim/v1.0.0
+basePath: /api/am/store/v0.9
 
 # The following media types can be passed as input in message bodies of the API.
 # The actual media type must be specified in the Content-Type header field of the request.
@@ -58,9 +56,9 @@ x-wso2-security:
   apim:
     x-wso2-scopes:
       - description: ""
-        roles: subscriber
-        name: API_SUBSCRIBER_SCOPE
-        key: API_SUBSCRIBER_SCOPE
+        roles: Internal/subscriber
+        name: apim:subscribe
+        key: apim:subscribe
 
 ######################################################
 # The "API Collection" resource APIs
@@ -87,7 +85,13 @@ paths:
 
             You can search in attributes by using an **"attribute:"** modifier.
 
-            Eg. "provider:wso2" will match an API if the provider of the API is wso2.
+            Eg.
+            "provider:wso2" will match an API if the provider of the API is exactly "wso2".
+            
+            Additionally you can use wildcards.
+            
+            Eg.
+            "provider:wso2*" will match an API if the provider of the API starts with "wso2".
 
             Supported attribute modifiers are [**version, context, status,
             description, subcontext, doc, provider, tag **]
@@ -95,18 +99,10 @@ paths:
             If no advanced attribute modifier has been specified, search will match the
             given query string against API Name.
           type: string
-        - name: type
-          in: query
-          description: |
-            List prototype or production APIs.
-          type: string
-          enum:
-            - PRODUCTION
-            - PROTOTYPE
         - $ref : "#/parameters/Accept"
         - $ref : "#/parameters/If-None-Match"
       tags:
-        - API Collection
+        - aa
         - Retrieve
       responses:
         200:
@@ -261,20 +257,6 @@ paths:
         - $ref: '#/parameters/limit'
         - $ref: '#/parameters/offset'
         - $ref: '#/parameters/requestedTenant'
-        - name: query
-          in: query
-          description: |
-            Search condition.
-
-            You can search in attributes by using an **"attribute:"** modifier.
-
-            Eg. "name:Readme" will match a document if the name of the document is 'Readme'.
-
-            Supported attribute modifiers are [**name, summary, type **]
-
-            If no advanced attribute modifier has been specified, search will match the
-            given query string against document Name.
-          type: string
         - $ref: '#/parameters/Accept'
         - $ref: '#/parameters/If-None-Match'
       tags:
@@ -452,11 +434,23 @@ paths:
 # Retrieve a list of all applications of a certain subscriber
 #-----------------------------------------------------
     get:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Get a list of applications
       parameters:
         - $ref: '#/parameters/groupId'
+        - name : query
+          in: query
+          description: |
+            **Search condition**.
+
+            You can search for an application by specifying the name as "query" attribute.
+
+            Eg.
+            "app1" will match an application if the name is exactly "app1".
+
+            Currently this does not support wildcards. Given name must exactly match the application name.
+          type: string
         - $ref: '#/parameters/limit'
         - $ref: '#/parameters/offset'
         - $ref: '#/parameters/Accept'
@@ -502,7 +496,7 @@ paths:
 # Create a new application
 #-----------------------------------------------------
     post:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Create a new application.
       parameters:
@@ -566,7 +560,7 @@ paths:
 # Retrieve the details about a certain application
 #-----------------------------------------------------
     get:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Get application details
       parameters:
@@ -619,7 +613,7 @@ paths:
 # Update a certain application
 #-----------------------------------------------------
     put:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Update application details
       parameters:
@@ -685,7 +679,7 @@ paths:
 # Delete a certain application
 #-----------------------------------------------------
     delete:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Remove an application
       parameters:
@@ -722,7 +716,7 @@ paths:
 # Generate keys for an application
 #-----------------------------------------------------
     post:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Generate keys for application
       parameters:
@@ -790,7 +784,7 @@ paths:
 # Retrieve all subscriptions of a certain API and application
 #-----------------------------------------------------
     get:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Get subscription list.
         The API Identifier or Application Identifier
@@ -837,7 +831,7 @@ paths:
 # Create a new subscription
 #-----------------------------------------------------
     post:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Add a new subscription
       parameters:
@@ -893,7 +887,7 @@ paths:
 # Retrieve a certain subscription
 #-----------------------------------------------------
     get:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Get subscription details
       parameters:
@@ -936,7 +930,7 @@ paths:
 # Delete a certain subscription
 #-----------------------------------------------------
     delete:
-      x-scope: API_SUBSCRIBER_SCOPE
+      x-scope: apim:subscribe
       description: |
         Remove subscription
       parameters:
@@ -973,13 +967,13 @@ paths:
 # Retrieve the list of all available tiers
 #-----------------------------------------------------
     get:
-      x-scope: API_SUBSCRIBER_SCOPE
       description: |
         Get available tiers
       parameters:
         - $ref: '#/parameters/limit'
         - $ref: '#/parameters/offset'
         - $ref: '#/parameters/tierLevel'
+        - $ref: '#/parameters/requestedTenant'
         - $ref: '#/parameters/Accept'
         - $ref: '#/parameters/If-None-Match'
       tags:
@@ -1023,12 +1017,12 @@ paths:
 # Retrieve a certain tier
 #-----------------------------------------------------
     get:
-      x-scope: API_SUBSCRIBER_SCOPE
       description: |
         Get tier details
       parameters:
         - $ref: '#/parameters/tierName'
         - $ref: '#/parameters/tierLevel'
+        - $ref: '#/parameters/requestedTenant'
         - $ref: '#/parameters/Accept'
         - $ref: '#/parameters/If-None-Match'
         - $ref: '#/parameters/If-Modified-Since'
@@ -1088,26 +1082,9 @@ paths:
       parameters:
         - $ref: '#/parameters/limit'
         - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/requestedTenant'
         - $ref: '#/parameters/Accept'
         - $ref: '#/parameters/If-None-Match'
-        - name: query
-          in: query
-          description: |
-            **Search condition**.
-            
-
-            You can search in attributes by using **"attribute:"** modifier.
-
-
-            Supported attribute modifiers are [**apiName,version**]
-            
-
-            Eg. "apiName:phoneVerification" will match if the API Name is
-            phoneVerification.
-
-
-            If no attribute modifier is found search will match the given query string against Tag Name.
-          type: string
       tags:
         - Tag Collection
         - Retrieve
@@ -1349,16 +1326,19 @@ definitions:
         type: integer
         description: |
           Number of APIs returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/apis?limit=1&offset=2&query="
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/apis?limit=1&offset=0&query="
       list:
         type: array
         items:
@@ -1372,20 +1352,27 @@ definitions:
     properties:
       id:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorAPI
       description:
         type: string
+        example: A calculator API that supports basic operations
       context:
         type: string
+        example: CalculatorAPI
       version:
         type: string
+        example: 1.0.0
       provider:
         description: |
           If the provider value is not given, the user invoking the API will be used as the provider.
         type: string
+        example: admin
       status:
         type: string
+        example: PUBLISHED
 
 #-----------------------------------------------------
 # The API resource
@@ -1396,58 +1383,77 @@ definitions:
       - name
       - context
       - version
+      - provider
+      - status
       - apiDefinition
     properties:
       id:
         type: string
         description: |
           UUID of the api registry artifact
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorAPI
       description:
         type: string
+        example: A calculator API that supports basic operations
       context:
         type: string
+        example: CalculatorAPI
       version:
         type: string
+        example: 1.0.0
       provider:
         description: |
           If the provider value is not given user invoking the api will be used as the provider.
         type: string
+        example: admin
       apiDefinition:
         description: |
           Swagger definition of the API which contains details about URI templates and scopes
         type: string
+        example: "{\"paths\":{\"\\/substract\":{\"get\":{\"x-auth-type\":\"Application & Application User\",\"x-throttling-tier\":\"Unlimited\",\"parameters\":[{\"name\":\"x\",\"required\":true,\"type\":\"string\",\"in\":\"query\"},{\"name\":\"y\",\"required\":true,\"type\":\"string\",\"in\":\"query\"}],\"responses\":{\"200\":{}}}},\"\\/add\":{\"get\":{\"x-auth-type\":\"Application & Application User\",\"x-throttling-tier\":\"Unlimited\",\"parameters\":[{\"name\":\"x\",\"required\":true,\"type\":\"string\",\"in\":\"query\"},{\"name\":\"y\",\"required\":true,\"type\":\"string\",\"in\":\"query\"}],\"responses\":{\"200\":{}}}}},\"swagger\":\"2.0\",\"info\":{\"title\":\"CalculatorAPI\",\"version\":\"1.0.0\"}}"
       status:
         type: string
+        example: PUBLISHED
       isDefaultVersion:
         type: boolean
+        example: false
       transport:
         type: array
         items:
           description: |
             Supported transports for the API (http and/or https).
           type: string
+        example: ["http","https"]
       tags:
         type: array
         items:
           type: string
+        example: ["substract","add"]
       tiers:
         type: array
         items:
           type: string
+        example: ["Unlimited"]
       thumbnailUrl:
         type: string
+        example: ""
       businessInformation:
         properties:
           businessOwner:
             type: string
+            example: businessowner
           businessOwnerEmail:
             type: string
+            example: businessowner@wso2.com
           technicalOwner:
             type: string
+            example: technicalowner
           technicalOwnerEmail:
             type: string
+            example: technicalowner@wso2.com
 
 #-----------------------------------------------------
 # The Application List resource
@@ -1459,16 +1465,19 @@ definitions:
         type: integer
         description: |
           Number of applications returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/applications?limit=1&offset=2&groupId="
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/applications?limit=1&offset=0&groupId="
       list:
         type: array
         items:
@@ -1485,26 +1494,36 @@ definitions:
     properties:
       applicationId:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorApp
       subscriber:
         description: |
           If subscriber is not given user invoking the API will be taken as the subscriber.
         type: string
+        example: admin
       throttlingTier:
         type: string
+        example: Unlimited
       callbackUrl:
         type: string
+        example: ""
       description:
         type: string
+        example: Sample calculator application
       status:
         type: string
+        example: APPROVED
+        default: ""
       groupId:
         type: string
+        example: ""
       keys:
         type: array
         items:
           $ref: '#/definitions/ApplicationKey'
+        example: []
   
 #-----------------------------------------------------
 # The Application Info resource
@@ -1514,18 +1533,25 @@ definitions:
     properties:
       applicationId:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorApp
       subscriber:
         type: string
+        example: admin
       throttlingTier:
         type: string
+        example: Unlimited
       description:
         type: string
+        example: Sample calculator application
       status:
         type: string
+        example: APPROVED
       groupId:
         type: string
+        example: ""
 
 #-----------------------------------------------------
 # The Document List resource
@@ -1537,16 +1563,19 @@ definitions:
         type: integer
         description: |
           Number of Documents returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/apis/01234567-0123-0123-0123-012345678901/documents?limit=1&offset=2"
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/apis/01234567-0123-0123-0123-012345678901/documents?limit=1&offset=0"
       list:
         type: array
         items:
@@ -1560,11 +1589,14 @@ definitions:
     required:
       - name
       - type
+      - sourceType
     properties:
       documentId:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       name:
         type: string
+        example: CalculatorDoc
       type:
         type: string
         enum:
@@ -1575,18 +1607,23 @@ definitions:
           - API_MESSAGE_FORMAT
           - SWAGGER_DOC
           - OTHER
+        example: HOWTO
       summary:
         type: string
+        example: "Summary of Calculator Documentation"
       sourceType:
         type: string
         enum:
           - INLINE
           - URL
           - FILE
+        example: INLINE
       sourceUrl:
         type: string
+        example: ""
       otherTypeName:
         type: string
+        example: ""
 
 #-----------------------------------------------------
 # The Tier List resource
@@ -1598,16 +1635,19 @@ definitions:
         type: integer
         description: |
           Number of Tiers returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/tiers/api?limit=1&offset=2"
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/tiers/api?limit=1&offset=0"
       list:
         type: array
         items:
@@ -1623,30 +1663,37 @@ definitions:
       - tierPlan
       - requestCount
       - unitTime
+      - stopOnQuotaReach
     properties:
       name:
         type: string
+        example: Platinum
       description:
         type: string
+        example: "Allows 50 request(s) per minute."
       tierLevel:
         type: string
         enum:
           - api
           - application
+        example: api
       attributes:
         description: |
           Custom attributes added to the tier policy
         type: object
         additionalProperties:
           type: string
+        example: {}
       requestCount:
         description: |
           Maximum number of requests which can be sent within a provided unit time
         type: integer
         format: int64
+        example: 50
       unitTime:
         type: integer
         format: int64
+        example: 60000
       tierPlan:
         description: |
           This attribute declares whether this tier is available under commercial or free
@@ -1654,11 +1701,13 @@ definitions:
         enum: 
           - FREE
           - COMMERCIAL
+        example: FREE
       stopOnQuotaReach:
         description: |
           If this attribute is set to false, you are capabale of sending requests 
           even if the request count exceeded within a unit time
         type: boolean
+        example: true
 
 #-----------------------------------------------------
 # The Subscription List resource
@@ -1670,16 +1719,19 @@ definitions:
         type: integer
         description: |
           Number of Subscriptions returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/subscriptions?limit=1&offset=2&apiId=01234567-0123-0123-0123-012345678901&groupId="
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/subscriptions?limit=1&offset=0&apiId=01234567-0123-0123-0123-012345678901&groupId="
       list:
         type: array
         items:
@@ -1691,16 +1743,22 @@ definitions:
   Subscription:
     title: Subscription
     required:
-      - subscriptionId
+      - applicationId
+      - apiIdentifier
+      - tier
     properties:
       subscriptionId:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       applicationId:
         type: string
-      apiId:
+        example: 01234567-0123-0123-0123-012345678901
+      apiIdentifier:
         type: string
+        example: 01234567-0123-0123-0123-012345678901
       tier:
         type: string
+        example: Unlimited
       status:
         type: string
         enum:
@@ -1709,6 +1767,7 @@ definitions:
           - UNBLOCKED
           - ON_HOLD
           - REJECTED
+        example: UNBLOCKED
 
 #-----------------------------------------------------
 # The Tag resource
@@ -1717,11 +1776,14 @@ definitions:
     title: Tag
     required:
       - name
+      - weight
     properties:
       name:
         type: string
+        example: tag1
       weight:
         type: integer
+        example: 5
 
 #-----------------------------------------------------
 # The Tag List resource
@@ -1733,16 +1795,19 @@ definitions:
         type: integer
         description: |
           Number of Tags returned.
+        example: 1
       next:
         type: string
         description: |
           Link to the next subset of resources qualified. 
           Empty if no more resources are to be returned.
+        example: "/tags?limit=1&offset=2"
       previous:
         type: string
         description: |
           Link to the previous subset of resources qualified. 
           Empty if current subset is the first subset returned.
+        example: "/tags?limit=1&offset=0"
       list:
         type: array
         items:
@@ -1789,8 +1854,7 @@ definitions:
       - message
     properties:
       code:
-        type: integer
-        format: int64
+        type: string
       message:
         type: string
         description: |
@@ -1805,15 +1869,18 @@ definitions:
       accessToken:
         type: string
         description: Access token
+        example: 01234567890123456789012345678901
       tokenScopes:
         type: array
         items: 
           type: string
         description: Valid scopes for the access token
+        example: ["default"]
       validityTime:
         type: integer
         format: int64
         description: Maximum validity time for the access token
+        example: 3600
   
 #-----------------------------------------------------
 # The Application Key resource
@@ -1824,23 +1891,28 @@ definitions:
       consumerKey:
         type: string
         description: Consumer key of the application
+        example: vYDoc9s7IgAFdkSyNDaswBX7ejoa
       consumerSecret:
         type: string
         description: Consumer secret of the application
+        example: TIDlOFkpzB7WjufO3OJUhy1fsvAa
       supportedGrantTypes:
         type: array
         items: 
           type: string
         description: Supported grant types for the application
+        example: ["client_credentials","password"]
       keyState:
         type: string
         description: State of the key generation of the application
+        example: APPROVED
       keyType:
         description: Key type
         type: string
         enum:
           - PRODUCTION
           - SANDBOX
+        example: PRODUCTION
       token:
         description: Token details object
         $ref: '#/definitions/Token'
@@ -1850,27 +1922,36 @@ definitions:
 #-----------------------------------------------------
   ApplicationKeyGenerateRequest :
     title: Application key generation request object
+    required:
+      - keyType
+      - validityTime
+      - accessAllowDomains
     properties:
       keyType:
         type: string
         enum:
           - PRODUCTION
           - SANDBOX
+        example: PRODUCTION
       validityTime:
         type: string
+        example: 3600
       callbackUrl:
         type: string
         description: Callback URL
+        example: ""
       accessAllowDomains:
         type: array
         items: 
           type: string
         description: Allowed domains for the access token
+        example: ["ALL"]
       scopes:
         type: array
         items: 
           type: string
         description: Allowed scopes for the access token
+        example: ["am_application_scope","default"]
 
 #-----------------------------------------------------
 # END-OF-FILE
